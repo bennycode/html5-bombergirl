@@ -39,11 +39,16 @@ Player = Entity.extend({
     bombs: [],
 
     controls: {
-        'up': 'up',
-        'left': 'left',
-        'down': 'down',
-        'right': 'right',
-        'bomb': 'bomb'
+        'up': false,
+        'left': false,
+        'down': false,
+        'right': false,
+        'bomb': false
+    },
+
+    movingPos: {
+        x: 0,
+        y: 0
     },
 
     /**
@@ -56,10 +61,6 @@ Player = Entity.extend({
     init: function(position, controls, id) {
         if (id) {
             this.id = id;
-        }
-
-        if (controls) {
-            this.controls = controls;
         }
 
         var img = gGameEngine.playerBoyImg;
@@ -93,41 +94,48 @@ Player = Entity.extend({
         gGameEngine.stage.addChild(this.bmp);
 
         this.bombs = [];
-        this.setBombsListener();
+        //this.setBombsListener();
     },
 
-    setBombsListener: function() {
-        // Subscribe to bombs spawning
-        if (!(this instanceof Bot)) {
-            var that = this;
-            gInputEngine.addListener(this.controls.bomb, function() {
-                // Check whether there is already bomb on this position
-                for (var i = 0; i < gGameEngine.bombs.length; i++) {
-                    var bomb = gGameEngine.bombs[i];
-                    if (Utils.comparePositions(bomb.position, that.position)) {
-                        return;
-                    }
-                }
+    respawn: function() {
+        var position = gGameEngine.getSpawnPosition();
+        this.alive = true;
+        this.bmp.alpha = 1;
+        this.position = position;
+        var pixels = Utils.convertToBitmapPosition(position);
+        this.bmp.x = pixels.x;
+        this.bmp.y = pixels.y;
+    },
 
-                var unexplodedBombs = 0;
-                for (var i = 0; i < that.bombs.length; i++) {
-                    if (!that.bombs[i].exploded) {
-                        unexplodedBombs++;
-                    }
-                }
+    placeBomb: function() {
 
-                if (unexplodedBombs < that.bombsMax) {
-                    var bomb = new Bomb(that.position, that.bombStrength);
-                    gGameEngine.stage.addChild(bomb.bmp);
-                    that.bombs.push(bomb);
-                    gGameEngine.bombs.push(bomb);
+        var that = this;
+        // Check whether there is already bomb on this position
+        for (var i = 0; i < gGameEngine.bombs.length; i++) {
+            var bomb = gGameEngine.bombs[i];
+            if (Utils.comparePositions(bomb.position, this.position)) {
+                return;
+            }
+        }
 
-                    bomb.setExplodeListener(function() {
-                        Utils.removeFromArray(that.bombs, bomb);
-                    });
-                }
+        var unexplodedBombs = 0;
+        for (var i = 0; i < this.bombs.length; i++) {
+            if (!this.bombs[i].exploded) {
+                unexplodedBombs++;
+            }
+        }
+
+        if (unexplodedBombs < this.bombsMax) {
+            var bomb = new Bomb(this.position, this.bombStrength);
+            gGameEngine.stage.addChild(bomb.bmp);
+            this.bombs.push(bomb);
+            gGameEngine.bombs.push(bomb);
+
+            bomb.setExplodeListener(function() {
+                Utils.removeFromArray(that.bombs, bomb);
             });
         }
+
     },
 
     update: function() {
@@ -142,19 +150,19 @@ Player = Entity.extend({
 
         var dirX = 0;
         var dirY = 0;
-        if (gInputEngine.actions[this.controls.up]) {
+        if (this.controls.up) {
             this.animate('up');
             position.y -= this.velocity;
             dirY = -1;
-        } else if (gInputEngine.actions[this.controls.down]) {
+        } else if (this.controls.down) {
             this.animate('down');
             position.y += this.velocity;
             dirY = 1;
-        } else if (gInputEngine.actions[this.controls.left]) {
+        } else if (this.controls.left) {
             this.animate('left');
             position.x -= this.velocity;
             dirX = -1;
-        } else if (gInputEngine.actions[this.controls.right]) {
+        } else if (this.controls.right) {
             this.animate('right');
             position.x += this.velocity;
             dirX = 1;
@@ -352,11 +360,11 @@ Player = Entity.extend({
     die: function() {
         this.alive = false;
 
-        if (gGameEngine.countPlayersAlive() == 1 && gGameEngine.playersCount == 2) {
-            gGameEngine.gameOver('win');
-        } else if (gGameEngine.countPlayersAlive() == 0) {
-            gGameEngine.gameOver('lose');
-        }
+        //if (gGameEngine.countPlayersAlive() == 1 && gGameEngine.playersCount == 2) {
+        //    gGameEngine.gameOver('win');
+        //} else if (gGameEngine.countPlayersAlive() == 0) {
+        //    gGameEngine.gameOver('lose');
+        //}
 
         this.bmp.gotoAndPlay('dead');
         this.fade();
@@ -365,6 +373,7 @@ Player = Entity.extend({
     fade: function() {
         var timer = 0;
         var bmp = this.bmp;
+        bmp.player = this;
         var fade = setInterval(function() {
             timer++;
 
@@ -373,6 +382,7 @@ Player = Entity.extend({
             }
             if (bmp.alpha <= 0) {
                 clearInterval(fade);
+                bmp.player.respawn();
             }
 
         }, 30);

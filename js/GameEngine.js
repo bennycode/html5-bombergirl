@@ -1,12 +1,12 @@
 GameEngine = Class.extend({
     tileSize: 32,
-    tilesX: 17,
-    tilesY: 13,
+    tilesX: Math.floor(window.innerWidth / 32),
+    tilesY: Math.floor(window.innerHeight / 32) - 2,
     size: {},
     fps: 50,
-    botsCount: 2, /* 0 - 3 */
-    playersCount: 2, /* 1 - 2 */
-    bonusesPercent: 16,
+    botsCount: 0, /* 0 - 3 */
+    playersCount: 0, /* 1 - 2 */
+    bonusesPercent: 22,
 
     stage: null,
     menu: null,
@@ -30,22 +30,24 @@ GameEngine = Class.extend({
     soundtrackPlaying: false,
     soundtrack: null,
 
-    init: function() {
+    init: function () {
         this.size = {
             w: this.tileSize * this.tilesX,
             h: this.tileSize * this.tilesY
         };
     },
 
-    load: function() {
+    load: function () {
         // Init canvas
         this.stage = new createjs.Stage("canvas");
-        this.stage.enableMouseOver();
+        this.stage.canvas.width = window.innerWidth;
+        this.stage.canvas.height = window.innerHeight;
+        //this.stage.enableMouseOver();
 
         // Load assets
         var queue = new createjs.LoadQueue();
         var that = this;
-        queue.addEventListener("complete", function() {
+        queue.addEventListener("complete", function () {
             that.playerBoyImg = queue.getResult("playerBoy");
             that.playerGirlImg = queue.getResult("playerGirl");
             that.playerGirl2Img = queue.getResult("playerGirl2");
@@ -78,7 +80,7 @@ GameEngine = Class.extend({
         this.menu = new Menu();
     },
 
-    setup: function() {
+    setup: function () {
         if (!gInputEngine.bindings.length) {
             gInputEngine.setup();
         }
@@ -91,16 +93,16 @@ GameEngine = Class.extend({
         this.drawTiles();
         this.drawBonuses();
 
-        this.spawnBots();
-        this.spawnPlayers();
+        //this.spawnBots();
+        //this.spawnPlayers();
 
         // Toggle sound
         gInputEngine.addListener('mute', this.toggleSound);
 
         // Restart listener
         // Timeout because when you press enter in address bar too long, it would not show menu
-        setTimeout(function() {
-            gInputEngine.addListener('restart', function() {
+        setTimeout(function () {
+            gInputEngine.addListener('restart', function () {
                 if (gGameEngine.playersCount == 0) {
                     gGameEngine.menu.setMode('single');
                 } else {
@@ -111,7 +113,7 @@ GameEngine = Class.extend({
         }, 200);
 
         // Escape listener
-        gInputEngine.addListener('escape', function() {
+        gInputEngine.addListener('escape', function () {
             if (!gGameEngine.menu.visible) {
                 gGameEngine.menu.show();
             }
@@ -132,9 +134,10 @@ GameEngine = Class.extend({
         if (!this.playing) {
             this.menu.show();
         }
+        CF.init();
     },
 
-    onSoundLoaded: function(sound) {
+    onSoundLoaded: function (sound) {
         if (sound.id == 'game') {
             gGameEngine.soundtrackLoaded = true;
             if (gGameEngine.playersCount > 0) {
@@ -143,7 +146,7 @@ GameEngine = Class.extend({
         }
     },
 
-    playSoundtrack: function() {
+    playSoundtrack: function () {
         if (!gGameEngine.soundtrackPlaying) {
             gGameEngine.soundtrack = createjs.Sound.play("game", "none", 0, 0, -1);
             gGameEngine.soundtrack.setVolume(1);
@@ -151,7 +154,7 @@ GameEngine = Class.extend({
         }
     },
 
-    update: function() {
+    update: function () {
         // Player
         for (var i = 0; i < gGameEngine.players.length; i++) {
             var player = gGameEngine.players[i];
@@ -177,18 +180,40 @@ GameEngine = Class.extend({
         gGameEngine.stage.update();
     },
 
-    drawTiles: function() {
+    drawTiles: function () {
         for (var i = 0; i < this.tilesY; i++) {
             for (var j = 0; j < this.tilesX; j++) {
-                if ((i == 0 || j == 0 || i == this.tilesY - 1 || j == this.tilesX - 1)
+
+                // Make sure player can spawn
+                if ((i == 1 && j == 1) ||
+                    (i == 1 && j == this.tilesX - 2) ||
+                    (i == this.tilesY - 2 && j == this.tilesX - 2) ||
+                    (i == this.tilesY - 2 && j == 1) ||
+                        // Center top
+                    (j == Math.floor(this.tilesX / 2) && i == 1) ||
+                    (j == Math.floor(this.tilesX / 2) - 1 && i == 1) ||
+                    (j == Math.floor(this.tilesX / 2) + 1 && i == 1) ||
+                    (j == Math.floor(this.tilesX / 2) && i == 2) ||
+                        // Center bottom
+                    (j == Math.floor(this.tilesX / 2) && i == this.tilesY - 2) ||
+                    (j == Math.floor(this.tilesX / 2) - 1 && i == this.tilesY - 2) ||
+                    (j == Math.floor(this.tilesX / 2) + 1 && i == this.tilesY - 2) ||
+                    (j == Math.floor(this.tilesX / 2) && i == this.tilesY - 3)
+                ) {
+
+                    var tile = new Tile('grass', {x: j, y: i});
+                    this.stage.addChild(tile.bmp);
+
+                }
+                else if ((i == 0 || j == 0 || i == this.tilesY - 1 || j == this.tilesX - 1)
                     || (j % 2 == 0 && i % 2 == 0)) {
                     // Wall tiles
-                    var tile = new Tile('wall', { x: j, y: i });
+                    var tile = new Tile('wall', {x: j, y: i});
                     this.stage.addChild(tile.bmp);
                     this.tiles.push(tile);
                 } else {
                     // Grass tiles
-                    var tile = new Tile('grass', { x: j, y: i });
+                    var tile = new Tile('grass', {x: j, y: i});
                     this.stage.addChild(tile.bmp);
 
                     // Wood tiles
@@ -197,7 +222,7 @@ GameEngine = Class.extend({
                         && !(i <= 2 && j >= this.tilesX - 3)
                         && !(i >= this.tilesY - 3 && j <= 2)) {
 
-                        var wood = new Tile('wood', { x: j, y: i });
+                        var wood = new Tile('wood', {x: j, y: i});
                         this.stage.addChild(wood.bmp);
                         this.tiles.push(wood);
                     }
@@ -206,7 +231,7 @@ GameEngine = Class.extend({
         }
     },
 
-    drawBonuses: function() {
+    drawBonuses: function () {
         // Cache woods tiles
         var woods = [];
         for (var i = 0; i < this.tiles.length; i++) {
@@ -217,7 +242,7 @@ GameEngine = Class.extend({
         }
 
         // Sort tiles randomly
-        woods.sort(function() {
+        woods.sort(function () {
             return 0.5 - Math.random();
         });
 
@@ -247,64 +272,61 @@ GameEngine = Class.extend({
                 }
             }
         }
+    }
+    ,
+
+    getSpawnPosition: function () {
+        var availablePositions = [
+            {x: Math.floor(this.tilesX / 2), y: 1}, // center top
+            {x: Math.floor(this.tilesX / 2), y: this.tilesY - 2}, // center bottom
+            {x: 1, y: 1},
+            {x: this.tilesX - 2, y: this.tilesY - 2},
+            {x: 1, y: this.tilesY - 2},
+            {x: this.tilesX - 2, y: 1}
+        ];
+        var position = availablePositions[Math.floor(Math.random() * availablePositions.length)];
+        return position;
     },
 
-    spawnBots: function() {
-        this.bots = [];
-
-        if (this.botsCount >= 1) {
-            var bot2 = new Bot({ x: 1, y: this.tilesY - 2 });
-            this.bots.push(bot2);
-        }
-
-        if (this.botsCount >= 2) {
-            var bot3 = new Bot({ x: this.tilesX - 2, y: 1 });
-            this.bots.push(bot3);
-        }
-
-        if (this.botsCount >= 3) {
-            var bot = new Bot({ x: this.tilesX - 2, y: this.tilesY - 2 });
-            this.bots.push(bot);
-        }
-
-        if (this.botsCount >= 4) {
-            var bot = new Bot({ x: 1, y: 1 });
-            this.bots.push(bot);
-        }
-    },
-
-    spawnPlayers: function() {
+    /**
+     * Spawn a single player and return its object
+     */
+    spawnPlayer: function () {
         this.players = [];
 
-        if (this.playersCount >= 1) {
-            var player = new Player({ x: 1, y: 1 });
-            this.players.push(player);
-        }
+        var position = this.getSpawnPosition();
 
-        if (this.playersCount >= 2) {
-            var controls = {
-                'up': 'up2',
-                'left': 'left2',
-                'down': 'down2',
-                'right': 'right2',
-                'bomb': 'bomb2'
-            };
-            var player2 = new Player({ x: this.tilesX - 2, y: this.tilesY - 2 }, controls, 1);
-            this.players.push(player2);
+        var player = new Player(position);
+        this.players.push(player);
+        return player;
+
+    },
+
+    /**
+     * Remove player
+     * @param player
+     */
+    removePlayer: function (player) {
+
+        var indexOf = this.players.indexOf(player);
+        if (indexOf >= 0) {
+            gGameEngine.stage.removeChild(player.bmp);
+            this.players.splice(indexOf, 1);
         }
     },
 
     /**
      * Checks whether two rectangles intersect.
      */
-    intersectRect: function(a, b) {
+    intersectRect: function (a, b) {
         return (a.left <= b.right && b.left <= a.right && a.top <= b.bottom && b.top <= a.bottom);
-    },
+    }
+    ,
 
     /**
      * Returns tile at given position.
      */
-    getTile: function(position) {
+    getTile: function (position) {
         for (var i = 0; i < this.tiles.length; i++) {
             var tile = this.tiles[i];
             if (tile.position.x == position.x && tile.position.y == position.y) {
@@ -316,13 +338,15 @@ GameEngine = Class.extend({
     /**
      * Returns tile material at given position.
      */
-    getTileMaterial: function(position) {
+    getTileMaterial: function (position) {
         var tile = this.getTile(position);
-        return (tile) ? tile.material : 'grass' ;
+        return (tile) ? tile.material : 'grass';
     },
 
-    gameOver: function(status) {
-        if (gGameEngine.menu.visible) { return; }
+    gameOver: function (status) {
+        if (gGameEngine.menu.visible) {
+            return;
+        }
 
         if (status == 'win') {
             var winText = "You won!";
@@ -330,36 +354,46 @@ GameEngine = Class.extend({
                 var winner = gGameEngine.getWinner();
                 winText = winner == 0 ? "Player 1 won!" : "Player 2 won!";
             }
-            this.menu.show([{text: winText, color: '#669900'}, {text: ' ;D', color: '#99CC00'}]);
+            this.menu.show([{text: winText, color: '#669900'}, {
+                text: ' ;D',
+                color: '#99CC00'
+            }]);
         } else {
-            this.menu.show([{text: 'Game Over', color: '#CC0000'}, {text: ' :(', color: '#FF4444'}]);
+            this.menu.show([{text: 'Game Over', color: '#CC0000'}, {
+                text: ' :(',
+                color: '#FF4444'
+            }]);
         }
-    },
+    }
+    ,
 
-    getWinner: function() {
+    getWinner: function () {
         for (var i = 0; i < gGameEngine.players.length; i++) {
             var player = gGameEngine.players[i];
             if (player.alive) {
                 return i;
             }
         }
-    },
+    }
+    ,
 
-    restart: function() {
+    restart: function () {
         gInputEngine.removeAllListeners();
         gGameEngine.stage.removeAllChildren();
         gGameEngine.setup();
-    },
+    }
+    ,
 
     /**
      * Moves specified child to the front.
      */
-    moveToFront: function(child) {
+    moveToFront: function (child) {
         var children = gGameEngine.stage.getNumChildren();
         gGameEngine.stage.setChildIndex(child, children - 1);
-    },
+    }
+    ,
 
-    toggleSound: function() {
+    toggleSound: function () {
         if (gGameEngine.mute) {
             gGameEngine.mute = false;
             gGameEngine.soundtrack.resume();
@@ -367,9 +401,10 @@ GameEngine = Class.extend({
             gGameEngine.mute = true;
             gGameEngine.soundtrack.pause();
         }
-    },
+    }
+    ,
 
-    countPlayersAlive: function() {
+    countPlayersAlive: function () {
         var playersAlive = 0;
         for (var i = 0; i < gGameEngine.players.length; i++) {
             if (gGameEngine.players[i].alive) {
@@ -377,9 +412,10 @@ GameEngine = Class.extend({
             }
         }
         return playersAlive;
-    },
+    }
+    ,
 
-    getPlayersAndBots: function() {
+    getPlayersAndBots: function () {
         var players = [];
 
         for (var i = 0; i < gGameEngine.players.length; i++) {
@@ -392,6 +428,7 @@ GameEngine = Class.extend({
 
         return players;
     }
-});
+})
+;
 
 gGameEngine = new GameEngine();

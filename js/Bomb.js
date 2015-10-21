@@ -30,7 +30,7 @@ Bomb = Entity.extend({
     /**
      * Max timer value in seconds
      */
-    timerMax: 2,
+    timerMax: 4,
 
     exploded: false,
 
