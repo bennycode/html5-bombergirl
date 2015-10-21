@@ -58,7 +58,7 @@ Player = Entity.extend({
 
     deadTimer: 0,
 
-    init: function(position, controls, id) {
+    init: function (position, controls, id) {
         if (id) {
             this.id = id;
         }
@@ -74,7 +74,12 @@ Player = Entity.extend({
 
         var spriteSheet = new createjs.SpriteSheet({
             images: [img],
-            frames: { width: this.size.w, height: this.size.h, regX: 10, regY: 12 },
+            frames: {
+                width: this.size.w,
+                height: this.size.h,
+                regX: 10,
+                regY: 12
+            },
             animations: {
                 idle: [0, 0, 'idle'],
                 down: [0, 3, 'down', 0.1],
@@ -97,7 +102,7 @@ Player = Entity.extend({
         //this.setBombsListener();
     },
 
-    respawn: function() {
+    respawn: function () {
         var position = gGameEngine.getSpawnPosition();
         this.alive = true;
         this.bmp.alpha = 1;
@@ -105,9 +110,12 @@ Player = Entity.extend({
         var pixels = Utils.convertToBitmapPosition(position);
         this.bmp.x = pixels.x;
         this.bmp.y = pixels.y;
+        this.velocity = 2;
+        this.bombsMax = 1;
+        this.bombStrength = 1;
     },
 
-    placeBomb: function() {
+    placeBomb: function () {
 
         var that = this;
         // Check whether there is already bomb on this position
@@ -131,14 +139,14 @@ Player = Entity.extend({
             this.bombs.push(bomb);
             gGameEngine.bombs.push(bomb);
 
-            bomb.setExplodeListener(function() {
+            bomb.setExplodeListener(function () {
                 Utils.removeFromArray(that.bombs, bomb);
             });
         }
 
     },
 
-    update: function() {
+    update: function () {
         if (!this.alive) {
             //this.fade();
             return;
@@ -146,7 +154,7 @@ Player = Entity.extend({
         if (gGameEngine.menu.visible) {
             return;
         }
-        var position = { x: this.bmp.x, y: this.bmp.y };
+        var position = {x: this.bmp.x, y: this.bmp.y};
 
         var dirX = 0;
         var dirY = 0;
@@ -206,28 +214,34 @@ Player = Entity.extend({
      * Checks whether we are on corner to target position.
      * Returns position where we should move before we can go to target.
      */
-    getCornerFix: function(dirX, dirY) {
+    getCornerFix: function (dirX, dirY) {
         var edgeSize = 30;
 
         // fix position to where we should go first
         var position = {};
 
         // possible fix position we are going to choose from
-        var pos1 = { x: this.position.x + dirY, y: this.position.y + dirX };
+        var pos1 = {x: this.position.x + dirY, y: this.position.y + dirX};
         var bmp1 = Utils.convertToBitmapPosition(pos1);
 
-        var pos2 = { x: this.position.x - dirY, y: this.position.y - dirX };
+        var pos2 = {x: this.position.x - dirY, y: this.position.y - dirX};
         var bmp2 = Utils.convertToBitmapPosition(pos2);
 
         // in front of current position
-        if (gGameEngine.getTileMaterial({ x: this.position.x + dirX, y: this.position.y + dirY }) == 'grass') {
+        if (gGameEngine.getTileMaterial({
+                x: this.position.x + dirX,
+                y: this.position.y + dirY
+            }) == 'grass') {
             position = this.position;
         }
         // right bottom
         // left top
         else if (gGameEngine.getTileMaterial(pos1) == 'grass'
             && Math.abs(this.bmp.y - bmp1.y) < edgeSize && Math.abs(this.bmp.x - bmp1.x) < edgeSize) {
-            if (gGameEngine.getTileMaterial({ x: pos1.x + dirX, y: pos1.y + dirY }) == 'grass') {
+            if (gGameEngine.getTileMaterial({
+                    x: pos1.x + dirX,
+                    y: pos1.y + dirY
+                }) == 'grass') {
                 position = pos1;
             }
         }
@@ -235,12 +249,15 @@ Player = Entity.extend({
         // left bottom
         else if (gGameEngine.getTileMaterial(pos2) == 'grass'
             && Math.abs(this.bmp.y - bmp2.y) < edgeSize && Math.abs(this.bmp.x - bmp2.x) < edgeSize) {
-            if (gGameEngine.getTileMaterial({ x: pos2.x + dirX, y: pos2.y + dirY }) == 'grass') {
+            if (gGameEngine.getTileMaterial({
+                    x: pos2.x + dirX,
+                    y: pos2.y + dirY
+                }) == 'grass') {
                 position = pos2;
             }
         }
 
-        if (position.x &&  gGameEngine.getTileMaterial(position) == 'grass') {
+        if (position.x && gGameEngine.getTileMaterial(position) == 'grass') {
             return Utils.convertToBitmapPosition(position);
         }
     },
@@ -248,14 +265,14 @@ Player = Entity.extend({
     /**
      * Calculates and updates entity position according to its actual bitmap position
      */
-    updatePosition: function() {
+    updatePosition: function () {
         this.position = Utils.convertToEntityPosition(this.bmp);
     },
 
     /**
      * Returns true when collision is detected and we should not move to target position.
      */
-    detectWallCollision: function(position) {
+    detectWallCollision: function (position) {
         var player = {};
         player.left = position.x;
         player.top = position.y;
@@ -273,7 +290,7 @@ Player = Entity.extend({
             tile.right = tile.left + gGameEngine.tileSize - 30;
             tile.bottom = tile.top + gGameEngine.tileSize - 30;
 
-            if(gGameEngine.intersectRect(player, tile)) {
+            if (gGameEngine.intersectRect(player, tile)) {
                 return true;
             }
         }
@@ -283,7 +300,7 @@ Player = Entity.extend({
     /**
      * Returns true when the bomb collision is detected and we should not move to target position.
      */
-    detectBombCollision: function(pixels) {
+    detectBombCollision: function (pixels) {
         var position = Utils.convertToEntityPosition(pixels);
 
         for (var i = 0; i < gGameEngine.bombs.length; i++) {
@@ -307,7 +324,7 @@ Player = Entity.extend({
         return false;
     },
 
-    detectFireCollision: function() {
+    detectFireCollision: function () {
         var bombs = gGameEngine.bombs;
         for (var i = 0; i < bombs.length; i++) {
             var bomb = bombs[i];
@@ -325,7 +342,7 @@ Player = Entity.extend({
     /**
      * Checks whether we have got bonus and applies it.
      */
-    handleBonusCollision: function() {
+    handleBonusCollision: function () {
         for (var i = 0; i < gGameEngine.bonuses.length; i++) {
             var bonus = gGameEngine.bonuses[i];
             if (Utils.comparePositions(bonus.position, this.position)) {
@@ -338,7 +355,7 @@ Player = Entity.extend({
     /**
      * Applies bonus.
      */
-    applyBonus: function(bonus) {
+    applyBonus: function (bonus) {
         if (bonus.type == 'speed') {
             this.velocity += 0.8;
         } else if (bonus.type == 'bomb') {
@@ -351,23 +368,23 @@ Player = Entity.extend({
     /**
      * Changes animation if requested animation is not already current.
      */
-    animate: function(animation) {
+    animate: function (animation) {
         if (!this.bmp.currentAnimation || this.bmp.currentAnimation.indexOf(animation) === -1) {
             this.bmp.gotoAndPlay(animation);
         }
     },
 
-    die: function() {
+    die: function () {
         this.alive = false;
         this.bmp.gotoAndPlay('dead');
         this.fade();
     },
 
-    fade: function() {
+    fade: function () {
         var timer = 0;
         var bmp = this.bmp;
         bmp.player = this;
-        var fade = setInterval(function() {
+        var fade = setInterval(function () {
             timer++;
 
             if (timer > 30) {
