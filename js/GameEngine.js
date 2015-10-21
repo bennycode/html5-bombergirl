@@ -78,6 +78,7 @@ GameEngine = Class.extend({
 
         // Create menu
         this.menu = new Menu();
+
     },
 
     setup: function () {
@@ -125,10 +126,8 @@ GameEngine = Class.extend({
             createjs.Ticker.setFPS(this.fps);
         }
 
-        if (gGameEngine.playersCount > 0) {
-            if (this.soundtrackLoaded) {
-                this.playSoundtrack();
-            }
+        if (this.soundtrackLoaded) {
+            this.playSoundtrack();
         }
 
         if (!this.playing) {
@@ -140,9 +139,7 @@ GameEngine = Class.extend({
     onSoundLoaded: function (sound) {
         if (sound.id == 'game') {
             gGameEngine.soundtrackLoaded = true;
-            if (gGameEngine.playersCount > 0) {
-                gGameEngine.playSoundtrack();
-            }
+            gGameEngine.playSoundtrack();
         }
     },
 
@@ -343,46 +340,11 @@ GameEngine = Class.extend({
         return (tile) ? tile.material : 'grass';
     },
 
-    gameOver: function (status) {
-        if (gGameEngine.menu.visible) {
-            return;
-        }
-
-        if (status == 'win') {
-            var winText = "You won!";
-            if (gGameEngine.playersCount > 1) {
-                var winner = gGameEngine.getWinner();
-                winText = winner == 0 ? "Player 1 won!" : "Player 2 won!";
-            }
-            this.menu.show([{text: winText, color: '#669900'}, {
-                text: ' ;D',
-                color: '#99CC00'
-            }]);
-        } else {
-            this.menu.show([{text: 'Game Over', color: '#CC0000'}, {
-                text: ' :(',
-                color: '#FF4444'
-            }]);
-        }
-    }
-    ,
-
-    getWinner: function () {
-        for (var i = 0; i < gGameEngine.players.length; i++) {
-            var player = gGameEngine.players[i];
-            if (player.alive) {
-                return i;
-            }
-        }
-    }
-    ,
-
     restart: function () {
         gInputEngine.removeAllListeners();
         gGameEngine.stage.removeAllChildren();
         gGameEngine.setup();
-    }
-    ,
+    },
 
     /**
      * Moves specified child to the front.
@@ -390,19 +352,17 @@ GameEngine = Class.extend({
     moveToFront: function (child) {
         var children = gGameEngine.stage.getNumChildren();
         gGameEngine.stage.setChildIndex(child, children - 1);
-    }
-    ,
+    },
 
     toggleSound: function () {
         if (gGameEngine.mute) {
             gGameEngine.mute = false;
-            gGameEngine.soundtrack.resume();
+            gGameEngine.soundtrack._resume();
         } else {
             gGameEngine.mute = true;
-            gGameEngine.soundtrack.pause();
+            gGameEngine.soundtrack._pause();
         }
-    }
-    ,
+    },
 
     countPlayersAlive: function () {
         var playersAlive = 0;

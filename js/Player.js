@@ -359,13 +359,6 @@ Player = Entity.extend({
 
     die: function() {
         this.alive = false;
-
-        //if (gGameEngine.countPlayersAlive() == 1 && gGameEngine.playersCount == 2) {
-        //    gGameEngine.gameOver('win');
-        //} else if (gGameEngine.countPlayersAlive() == 0) {
-        //    gGameEngine.gameOver('lose');
-        //}
-
         this.bmp.gotoAndPlay('dead');
         this.fade();
     },
