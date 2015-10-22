@@ -21,7 +21,9 @@ a {
     top: 0;
 }
 canvas {
-    margin-top: 32px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
 }
 .info {
     line-height: 32px;

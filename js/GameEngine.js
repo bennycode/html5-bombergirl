@@ -1,7 +1,11 @@
 GameEngine = Class.extend({
     tileSize: 32,
-    tilesX: Math.floor(window.innerWidth / 32),
-    tilesY: Math.floor(window.innerHeight / 32) - 2,
+    settings: {
+        width: 1280,
+        height: 720
+    },
+    tilesX: Math.floor(1280 / 32),
+    tilesY: Math.floor(720 / 32) - 2,
     size: {},
     fps: 50,
     botsCount: 0, /* 0 - 3 */
@@ -40,8 +44,10 @@ GameEngine = Class.extend({
     load: function () {
         // Init canvas
         this.stage = new createjs.Stage("canvas");
-        this.stage.canvas.width = window.innerWidth;
-        this.stage.canvas.height = window.innerHeight;
+        window.addEventListener('resize', this.resize.bind(this));
+        this.stage.canvas.width = 1280;
+        this.stage.canvas.height = 720;
+        this.resize();
         //this.stage.enableMouseOver();
 
         // Load assets
@@ -78,6 +84,34 @@ GameEngine = Class.extend({
 
         // Create menu
         this.menu = new Menu();
+
+    },
+    resize: function () {
+
+        this.stage.canvas.width = this.settings.width;
+        this.stage.canvas.height = this.settings.height;
+
+        // Resize to maximum resolution. @todo check settings in localStorage
+        var widthToHeight = this.settings.width / this.settings.height;
+
+        var newWidth = window.innerWidth;
+        var newHeight = window.innerHeight;
+
+        var newWidthToHeight = newWidth / newHeight;
+
+        if (newWidthToHeight > widthToHeight) {
+            // window width is too wide relative to desired game width
+            newWidth = newHeight * widthToHeight;
+            this.stage.canvas.style.height = newHeight + 'px';
+            this.stage.canvas.style.width = newWidth + 'px';
+        } else { // window height is too high relative to desired game height
+            newHeight = newWidth / widthToHeight;
+            this.stage.canvas.style.width = newWidth + 'px';
+            this.stage.canvas.style.height = newHeight + 'px';
+        }
+
+        this.stage.canvas.style.marginTop = -(newHeight / 2) + 32 + 'px';
+        this.stage.canvas.style.marginLeft = -(newWidth / 2) + 'px';
 
     },
 
