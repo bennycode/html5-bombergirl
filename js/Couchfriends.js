@@ -108,20 +108,39 @@ var CF = CF || {
                         player.bomberGirl.controls.up = false;
                         player.bomberGirl.controls.right = false;
                         player.bomberGirl.controls.down = false;
-                        if (data.x <= -.1) {
-                            player.bomberGirl.controls.left = true;
+                        if (data.x >= -.1 && data.x <= .1 && data.y > -.1 && data.y < .1) {
+                            // Not moving
                         }
-                        else if (data.x >= .1) {
-                            player.bomberGirl.controls.right = true;
+                        var max = 0;
+                        var move = '';
+                        if (data.x < -.1) {
+                            if (max < Math.abs(data.x)) {
+                                move = 'left';
+                                max = Math.abs(data.x);
+                            }
                         }
-                        if (data.y <= -.1) {
-                            player.bomberGirl.controls.up = true;
+                        if (data.x > .1) {
+                            if (max < data.x) {
+                                move = 'right';
+                                max = data.x;
+                            }
                         }
-                        else if (data.y >= .1) {
-                            player.bomberGirl.controls.down = true;
+                        if (data.y < -.1) {
+                            if (max < Math.abs(data.y)) {
+                                move = 'up';
+                                max = Math.abs(data.y);
+                            }
+                        }
+                        if (data.y > .1) {
+                            if (max < data.y) {
+                                move = 'down';
+                            }
                         }
                         player.bomberGirl.movingPos.x = (data.x * 2);
                         player.bomberGirl.movingPos.y = (data.y * 2);
+                        if (move != '') {
+                            player.bomberGirl.controls[move] = true;
+                        }
                         return;
                     }
                 }
@@ -151,6 +170,30 @@ var CF = CF || {
                 }
             });
             COUCHFRIENDS.on('playerClickUp', function (data) {
+                for (var i = 0; i < CF.players.length; i++) {
+                    var player = CF.players[i];
+                    if (player.id == data.playerId) {
+                        if (data.id == 'button-left') {
+                            player.bomberGirl.controls.left = false;
+                        }
+                        else if (data.id == 'button-right') {
+                            player.bomberGirl.controls.right = false;
+                        }
+                        else if (data.id == 'button-up') {
+                            player.bomberGirl.controls.up = false;
+                        }
+                        else if (data.id == 'button-down') {
+                            player.bomberGirl.controls.down = false;
+                        }
+                        else {
+                            // Either button-a, button-b, button-x, button-y
+                            player.bomberGirl.placeBomb();
+                        }
+                        return;
+                    }
+                }
+            });
+            COUCHFRIENDS.on('buttonUp', function(data) {
                 for (var i = 0; i < CF.players.length; i++) {
                     var player = CF.players[i];
                     if (player.id == data.playerId) {
