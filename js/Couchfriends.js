@@ -33,7 +33,7 @@ var CF = CF || {
                     topic: 'game',
                     action: 'host',
                     data: {
-                        sessionKey: 'bomber-1234'
+                        sessionKey: 'bomberman-1234'
                     }
                 };
                 COUCHFRIENDS.send(jsonData);
