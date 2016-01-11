@@ -25,7 +25,7 @@
 var CF = CF || {
         players: [],
         init: function () {
-            COUCHFRIENDS.settings.apiKey = 'bomber-1234'; // Not needed for testing purposes
+            COUCHFRIENDS.settings.apiKey = 'bomberman-1234'; // Not needed for testing purposes
             COUCHFRIENDS.connect();
 
             COUCHFRIENDS.on('connect', function () {
