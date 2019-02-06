@@ -26,7 +26,7 @@ var CF = CF || {
         players: [],
         init: function () {
             COUCHFRIENDS.settings.apiKey = 'bomberman-1234'; // Not needed for testing purposes
-            COUCHFRIENDS.connect();
+            // COUCHFRIENDS.connect();
 
             COUCHFRIENDS.on('connect', function () {
                 var jsonData = {
@@ -38,7 +38,7 @@ var CF = CF || {
                 };
                 COUCHFRIENDS.send(jsonData);
             });
-            COUCHFRIENDS.on('playerJoined', function (data) {
+            COUCHFRIENDS.on('player.join', function (data) {
                 gGameEngine.menu.hide();
                 var bomberGirl = gGameEngine.spawnPlayer();
                 var player = {
@@ -47,8 +47,10 @@ var CF = CF || {
                 };
                 CF.players.push(player);
                 var jsonData = {
+                    id: data.id,
                     topic: 'interface',
                     action: 'buttonAdd',
+                    type: 'interface.buttonAdd',
                     data: {
                         id: 'a-b-x-y',
                         playerId: data.id // The id of the connected player. See 'playerJoined' callback.
@@ -56,8 +58,10 @@ var CF = CF || {
                 };
                 COUCHFRIENDS.send(jsonData);
                 var jsonData = {
+                    id: data.id,
                     topic: 'interface',
                     action: 'buttonAdd',
+                    type: 'interface.buttonAdd',
                     data: {
                         id: 'directional',
                         playerId: data.id // The id of the connected player. See 'playerJoined' callback.
@@ -65,17 +69,21 @@ var CF = CF || {
                 };
                 COUCHFRIENDS.send(jsonData);
                 var jsonData = {
+                    id: data.id,
                     topic: 'interface',
                     action: 'buttonRemove',
+                    type: 'interface.buttonRemove',
                     data: {
-                        id: 'orientation',
+                        id: 'axis',
                         playerId: data.id // The id of the connected player. See 'playerJoined' callback.
                     }
                 };
                 COUCHFRIENDS.send(jsonData);
                 var jsonData = {
+                    id: data.id,
                     topic: 'player',
                     action: 'identify',
+                    type: 'player.identify',
                     data: {
                         id: data.id,
                         color: '#ff0000' // Change the color of the player's controller
@@ -90,7 +98,7 @@ var CF = CF || {
              * @param {object} data list with the player information
              * @param {int} data.id the unique identifier of the player that left
              */
-            COUCHFRIENDS.on('playerLeft', function (data) {
+            COUCHFRIENDS.on('player.left', function (data) {
                 for (var i = 0; i < CF.players.length; i++) {
                     var player = CF.players[i];
                     if (player.id == data.id) {
@@ -100,7 +108,7 @@ var CF = CF || {
                     }
                 }
             });
-            COUCHFRIENDS.on('playerOrientation', function (data) {
+            COUCHFRIENDS.on('player.orientation', function (data) {
                 for (var i = 0; i < CF.players.length; i++) {
                     var player = CF.players[i];
                     if (player.id == data.id) {
@@ -145,93 +153,53 @@ var CF = CF || {
                     }
                 }
             });
-            COUCHFRIENDS.on('buttonClick', function (data) {
+            COUCHFRIENDS.on('player.buttonDown', function (data) {
+                console.log(data);
                 for (var i = 0; i < CF.players.length; i++) {
                     var player = CF.players[i];
-                    if (player.id == data.playerId) {
-                        if (data.id == 'button-left') {
-                            player.bomberGirl.controls.left = false;
-                        }
-                        else if (data.id == 'button-right') {
-                            player.bomberGirl.controls.right = false;
-                        }
-                        else if (data.id == 'button-up') {
-                            player.bomberGirl.controls.up = false;
-                        }
-                        else if (data.id == 'button-down') {
-                            player.bomberGirl.controls.down = false;
-                        }
-                        else {
-                            // Either button-a, button-b, button-x, button-y
-                            player.bomberGirl.placeBomb();
-                        }
-                        return;
-                    }
-                }
-            });
-            COUCHFRIENDS.on('playerClickUp', function (data) {
-                for (var i = 0; i < CF.players.length; i++) {
-                    var player = CF.players[i];
-                    if (player.id == data.playerId) {
-                        if (data.id == 'button-left') {
-                            player.bomberGirl.controls.left = false;
-                        }
-                        else if (data.id == 'button-right') {
-                            player.bomberGirl.controls.right = false;
-                        }
-                        else if (data.id == 'button-up') {
-                            player.bomberGirl.controls.up = false;
-                        }
-                        else if (data.id == 'button-down') {
-                            player.bomberGirl.controls.down = false;
-                        }
-                        else {
-                            // Either button-a, button-b, button-x, button-y
-                            player.bomberGirl.placeBomb();
-                        }
-                        return;
-                    }
-                }
-            });
-            COUCHFRIENDS.on('buttonUp', function(data) {
-                for (var i = 0; i < CF.players.length; i++) {
-                    var player = CF.players[i];
-                    if (player.id == data.playerId) {
-                        if (data.id == 'button-left') {
-                            player.bomberGirl.controls.left = false;
-                        }
-                        else if (data.id == 'button-right') {
-                            player.bomberGirl.controls.right = false;
-                        }
-                        else if (data.id == 'button-up') {
-                            player.bomberGirl.controls.up = false;
-                        }
-                        else if (data.id == 'button-down') {
-                            player.bomberGirl.controls.down = false;
-                        }
-                        else {
-                            // Either button-a, button-b, button-x, button-y
-                            player.bomberGirl.placeBomb();
-                        }
-                        return;
-                    }
-                }
-            });
-            COUCHFRIENDS.on('playerClickDown', function (data) {
-                for (var i = 0; i < CF.players.length; i++) {
-                    var player = CF.players[i];
-                    if (player.id == data.playerId) {
-                        if (data.id == 'button-left') {
+                    console.log(player);
+                    if (player.id == data.player.id) {
+                        if (data.id == 'left') {
                             player.bomberGirl.controls.left = true;
                         }
-                        else if (data.id == 'button-right') {
+                        else if (data.id == 'right') {
                             player.bomberGirl.controls.right = true;
                         }
-                        else if (data.id == 'button-up') {
+                        else if (data.id == 'up') {
                             player.bomberGirl.controls.up = true;
                         }
-                        else if (data.id == 'button-down') {
+                        else if (data.id == 'down') {
                             player.bomberGirl.controls.down = true;
+                        }
+                        else {
+                            // Either button-a, button-b, button-x, button-y
+                            player.bomberGirl.placeBomb();
+                        }
+                        return;
+                    }
+                }
+            });
+            COUCHFRIENDS.on('player.buttonUp', function (data) {
+                console.log(data);
+                for (var i = 0; i < CF.players.length; i++) {
+                    var player = CF.players[i];
+                    console.log(player);
+                    if (player.id == data.player.id) {
+                        if (data.id == 'left') {
+                            player.bomberGirl.controls.left = false;
+                        }
+                        else if (data.id == 'right') {
+                            player.bomberGirl.controls.right = false;
+                        }
+                        else if (data.id == 'up') {
+                            player.bomberGirl.controls.up = false;
+                        }
+                        else if (data.id == 'down') {
+                            player.bomberGirl.controls.down = false;
+                        }
+                        else {
+                            // Either button-a, button-b, button-x, button-y
+                            player.bomberGirl.placeBomb();
                         }
                         return;
                     }
